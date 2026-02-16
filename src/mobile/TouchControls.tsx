@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { VirtualJoystick } from './VirtualJoystick';
 import { ActionButtons } from './ActionButtons';
 import { HotbarMobile } from './HotbarMobile';
@@ -26,6 +26,11 @@ export function TouchControls() {
 
   const layout = isLandscape || isIPad ? 'landscape' : 'portrait';
 
+  // 调试日志
+  useEffect(() => {
+    console.log('[TouchControls] isLocked:', isLocked);
+  }, [isLocked]);
+
   const handleJoystickChange = useCallback((x: number, y: number) => {
     setTouchMoveInput(x, y);
   }, [setTouchMoveInput]);
@@ -36,6 +41,7 @@ export function TouchControls() {
 
   const handleLookStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const touch = e.touches[0];
     if (touch) {
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
@@ -46,6 +52,7 @@ export function TouchControls() {
   const handleLookMove = useCallback((e: React.TouchEvent) => {
     if (!lookActive) return;
     e.preventDefault();
+    e.stopPropagation();
 
     const touch = e.touches[0];
     if (!touch) return;
@@ -62,32 +69,39 @@ export function TouchControls() {
 
   const handleLookEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setLookActive(false);
     setTouchLookInput(0, 0);
   }, [setTouchLookInput]);
 
   const handleJump = useCallback(() => {
+    console.log('[TouchControls] Jump triggered');
     triggerTouchJump();
   }, [triggerTouchJump]);
 
   const handleMine = useCallback(() => {
+    console.log('[TouchControls] Mine triggered');
     triggerTouchMine();
   }, [triggerTouchMine]);
 
   const handlePlace = useCallback(() => {
+    console.log('[TouchControls] Place triggered');
     triggerTouchPlace();
   }, [triggerTouchPlace]);
 
   const handleOpenInventory = useCallback(() => {
+    console.log('[TouchControls] Inventory triggered');
     setOpenCraftingStation('inventory');
     setPaused(true);
   }, [setOpenCraftingStation, setPaused]);
 
   const handlePause = useCallback(() => {
+    console.log('[TouchControls] Pause triggered');
     setPaused(true);
   }, [setPaused]);
 
   const handleSlotChange = useCallback((slot: number) => {
+    console.log('[TouchControls] Slot change:', slot);
     setSelectedSlot(slot);
   }, [setSelectedSlot]);
 
@@ -96,16 +110,28 @@ export function TouchControls() {
   }
 
   return (
-    <>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 9999,
+        pointerEvents: 'none',
+      }}
+    >
       {/* 左下角 - 虚拟摇杆 */}
       <div
         data-touch-control
+        onTouchStart={(e) => e.stopPropagation()}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: layout === 'landscape' ? 140 : 120,
           left: 20,
-          zIndex: 1000,
+          zIndex: 10000,
           pointerEvents: 'auto',
+          touchAction: 'none',
         }}
       >
         <VirtualJoystick
@@ -119,12 +145,14 @@ export function TouchControls() {
       {/* 右下角 - 动作按钮 */}
       <div
         data-touch-control
+        onTouchStart={(e) => e.stopPropagation()}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: layout === 'landscape' ? 140 : 120,
           right: 20,
-          zIndex: 1000,
+          zIndex: 10000,
           pointerEvents: 'auto',
+          touchAction: 'none',
         }}
       >
         <ActionButtons
@@ -141,12 +169,12 @@ export function TouchControls() {
       <div
         data-touch-control
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 80,
           right: 0,
           width: '50%',
           height: '50%',
-          zIndex: 900,
+          zIndex: 9000,
           touchAction: 'none',
           pointerEvents: 'auto',
         }}
@@ -157,16 +185,29 @@ export function TouchControls() {
       />
 
       {/* 底部快捷栏 */}
-      <HotbarMobile
-        inventory={inventory}
-        selectedSlot={selectedSlot}
-        onSlotChange={handleSlotChange}
-      />
+      <div
+        onTouchStart={(e) => e.stopPropagation()}
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10000,
+          pointerEvents: 'auto',
+          touchAction: 'none',
+        }}
+      >
+        <HotbarMobile
+          inventory={inventory}
+          selectedSlot={selectedSlot}
+          onSlotChange={handleSlotChange}
+        />
+      </div>
 
       {/* 移动端提示 */}
       <div
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 20,
           left: '50%',
           transform: 'translateX(-50%)',
@@ -175,7 +216,7 @@ export function TouchControls() {
           padding: '10px 20px',
           borderRadius: 20,
           fontSize: 14,
-          zIndex: 1100,
+          zIndex: 11000,
           textAlign: 'center',
           pointerEvents: 'none',
           fontWeight: 'bold',
@@ -183,6 +224,6 @@ export function TouchControls() {
       >
         📱 触摸控制模式
       </div>
-    </>
+    </div>
   );
 }
