@@ -15,7 +15,8 @@ export function Player() {
     isLocked, setLocked, removeBlock, addBlock, getBlockAt, 
     selectedSlot, inventory, removeFromInventory, addToInventory: _addToInventory,
     miningState, startMining, updateMiningProgress, stopMining, completeMining,
-    getEquippedTool
+    getEquippedTool,
+    touchMoveInput, touchLookInput, touchJumpTrigger, touchMineTrigger, touchPlaceTrigger
   } = useGameStore()
   
   // 物理体
@@ -253,15 +254,22 @@ export function Player() {
     sideVector.y = 0
     sideVector.normalize()
     
+    // 键盘移动
     if (moveState.current.forward) direction.add(frontVector)
     if (moveState.current.backward) direction.sub(frontVector)
     if (moveState.current.left) direction.sub(sideVector)
     if (moveState.current.right) direction.add(sideVector)
     
+    // 触摸移动 (叠加到键盘移动)
+    if (touchMoveInput.x !== 0 || touchMoveInput.y !== 0) {
+      direction.add(frontVector.clone().multiplyScalar(touchMoveInput.y))
+      direction.add(sideVector.clone().multiplyScalar(touchMoveInput.x))
+    }
+    
     direction.normalize().multiplyScalar(SPEED)
     
-    // 跳跃
-    if (moveState.current.jump && isGrounded.current) {
+    // 跳跃 (键盘或触摸)
+    if ((moveState.current.jump && isGrounded.current) || touchJumpTrigger > 0) {
       api.velocity.set(velocity.current[0], JUMP_FORCE, velocity.current[2])
       isGrounded.current = false
     } else {
@@ -275,6 +283,86 @@ export function Player() {
     // 简单的地面检测
     if (Math.abs(velocity.current[1]) < 0.1) {
       isGrounded.current = true
+    }
+    
+    // 视角旋转 (触摸)
+    if (touchLookInput.deltaX !== 0 || touchLookInput.deltaY !== 0) {
+      let euler = new THREE.Euler(0, 0, 0, 'YXZ')
+      euler.setFromQuaternion(camera.quaternion)
+      euler.y -= touchLookInput.deltaX * 0.002
+      euler.x -= touchLookInput.deltaY * 0.002
+      euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x))
+      camera.quaternion.setFromEuler(euler)
+      
+      // 重置触摸视角输入
+      useGameStore.getState().setTouchLookInput(0, 0)
+    }
+    
+    // 触摸挖掘
+    if (touchMineTrigger > 0) {
+      // 执行挖掘逻辑
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(scene.children, true)
+      
+      for (const hit of intersects) {
+        if (hit.distance < 5 && (hit.object as any).userData?.type) {
+          const hitPoint = hit.point
+          const normal = hit.face?.normal || new THREE.Vector3()
+          
+          const blockPos: [number, number, number] = [
+            Math.round(hitPoint.x - normal.x * 0.1),
+            Math.round(hitPoint.y - normal.y * 0.1),
+            Math.round(hitPoint.z - normal.z * 0.1)
+          ]
+          
+          const block = getBlockAt(blockPos)
+          if (block) {
+            currentMiningTarget.current = blockPos
+            startMining(blockPos)
+            
+            // 立即完成挖掘 (触摸模式简化)
+            const blockProps = BLOCK_PROPERTIES[block.type]
+            if (blockProps) {
+              completeMining()
+            }
+          }
+          break
+        }
+      }
+    }
+    
+    // 触摸放置
+    if (touchPlaceTrigger > 0) {
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(scene.children, true)
+      
+      const item = inventory[selectedSlot]
+      if (item && item.count > 0 && item.type !== 'tool') {
+        for (const hit of intersects) {
+          if (hit.distance < 5) {
+            const normal = hit.face?.normal || new THREE.Vector3()
+            const placePos: [number, number, number] = [
+              Math.round(hit.point.x + normal.x * 0.5),
+              Math.round(hit.point.y + normal.y * 0.5),
+              Math.round(hit.point.z + normal.z * 0.5)
+            ]
+            
+            const playerPos = ref.current?.position
+            if (playerPos) {
+              const dx = Math.abs(playerPos.x - placePos[0])
+              const dy = Math.abs(playerPos.y - placePos[1])
+              const dz = Math.abs(playerPos.z - placePos[2])
+              if (dx < 1 && dy < 1.5 && dz < 1) continue
+            }
+            
+            if (!getBlockAt(placePos)) {
+              addBlock({ type: item.type as BlockType, position: placePos })
+              removeFromInventory(selectedSlot)
+            }
+            break
+          }
+        }
+      }
     }
     
     // 挖掘进度更新

@@ -89,6 +89,18 @@ interface GameState {
   // 打开的制作界面
   openCraftingStation: 'inventory' | 'crafting_table' | 'furnace' | null
   setOpenCraftingStation: (station: 'inventory' | 'crafting_table' | 'furnace' | null) => void
+  
+  // 触摸控制状态 (移动端支持)
+  touchMoveInput: { x: number; y: number }
+  touchLookInput: { deltaX: number; deltaY: number }
+  touchJumpTrigger: number // 使用计数触发跳跃
+  touchMineTrigger: number // 使用计数触发挖掘
+  touchPlaceTrigger: number // 使用计数触发放置
+  setTouchMoveInput: (x: number, y: number) => void
+  setTouchLookInput: (deltaX: number, deltaY: number) => void
+  triggerTouchJump: () => void
+  triggerTouchMine: () => void
+  triggerTouchPlace: () => void
 }
 
 // 初始化背包（包含工具和方块）
@@ -387,5 +399,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   setPaused: (paused) => set({ isPaused: paused }),
   
   openCraftingStation: null,
-  setOpenCraftingStation: (station) => set({ openCraftingStation: station })
+  setOpenCraftingStation: (station) => set({ openCraftingStation: station }),
+  
+  // 触摸控制状态
+  touchMoveInput: { x: 0, y: 0 },
+  touchLookInput: { deltaX: 0, deltaY: 0 },
+  touchJumpTrigger: 0,
+  touchMineTrigger: 0,
+  touchPlaceTrigger: 0,
+  setTouchMoveInput: (x, y) => set({ touchMoveInput: { x, y } }),
+  setTouchLookInput: (deltaX, deltaY) => set({ touchLookInput: { deltaX, deltaY } }),
+  triggerTouchJump: () => set(state => ({ touchJumpTrigger: state.touchJumpTrigger + 1 })),
+  triggerTouchMine: () => set(state => ({ touchMineTrigger: state.touchMineTrigger + 1 })),
+  triggerTouchPlace: () => set(state => ({ touchPlaceTrigger: state.touchPlaceTrigger + 1 })),
 }))

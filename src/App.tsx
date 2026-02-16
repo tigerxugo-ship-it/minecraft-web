@@ -10,6 +10,8 @@ import { FurnaceUI } from './crafting/FurnaceUI'
 import { SaveManagerUI } from './save/SaveManagerUI'
 import { useState, useEffect, useCallback } from 'react'
 import { isMobile, getRecommendedGLConfig, getMobileOptimizations, applyIOSFixes, isWebGLSupported } from './tools/deviceUtils'
+import { TouchControls } from './mobile/TouchControls'
+import { isIPad, preventDefaultTouchBehavior, restoreDefaultTouchBehavior } from './mobile/touchUtils'
 import './App.css'
 
 // WebGL 错误边界组件
@@ -61,6 +63,7 @@ function App() {
 
   // 移动端检测和初始化
   const mobile = isMobile()
+  const isIPadDevice = isIPad()
   const glConfig = getRecommendedGLConfig()
   const mobileOptimizations = getMobileOptimizations()
 
@@ -73,7 +76,18 @@ function App() {
       console.error('WebGL not supported')
       setWebglError(true)
     }
-  }, [])
+
+    // 移动端防止默认触摸行为
+    if (mobile || isIPadDevice) {
+      preventDefaultTouchBehavior()
+    }
+
+    return () => {
+      if (mobile || isIPadDevice) {
+        restoreDefaultTouchBehavior()
+      }
+    }
+  }, [mobile, isIPadDevice])
 
   // 键盘事件监听
   useEffect(() => {
@@ -195,6 +209,11 @@ function App() {
         gridSize={openCraftingStation === 'crafting_table' ? 3 : 2}
       />
       
+      {/* 移动端触摸控制 */}
+      {(mobile || isIPadDevice) && (
+        <TouchControls />
+      )}
+      
       {/* 熔炉界面 */}
       <FurnaceUI 
         isOpen={showFurnace} 
@@ -214,12 +233,13 @@ function App() {
 // 控制说明组件
 function ControlsHint() {
   const mobile = isMobile()
+  const isIPadDevice = isIPad()
   
-  if (mobile) {
+  if (mobile || isIPadDevice) {
     return (
       <div style={{
         position: 'fixed',
-        top: '20px',
+        top: '60px',
         left: '20px',
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
         color: 'white',
@@ -229,9 +249,12 @@ function ControlsHint() {
         zIndex: 100,
         maxWidth: '200px'
       }}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>移动端说明</h3>
-        <p style={{ margin: '4px 0' }}>⚠️ 移动端暂不支持游戏控制</p>
-        <p style={{ margin: '4px 0' }}>请使用桌面浏览器体验完整功能</p>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>📱 触摸控制</h3>
+        <p style={{ margin: '4px 0' }}>👈 左摇杆 - 移动</p>
+        <p style={{ margin: '4px 0' }}>👉 右滑 - 视角</p>
+        <p style={{ margin: '4px 0' }}>⛏️ 挖掘按钮</p>
+        <p style={{ margin: '4px 0' }}>🧱 放置按钮</p>
+        <p style={{ margin: '4px 0' }}>📦 背包按钮</p>
       </div>
     )
   }
