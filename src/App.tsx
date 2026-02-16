@@ -175,7 +175,8 @@ function App() {
       {/* UI 覆盖层 */}
       {!showSaveManager && !showCrafting && !showFurnace && isLocked && <div className="crosshair" />}
       
-      {!showSaveManager && !showCrafting && !showFurnace && <Hotbar />}
+      {/* 桌面端物品栏 - 仅在非移动端显示 */}
+      {!showSaveManager && !showCrafting && !showFurnace && !mobile && !isIPadDevice && <Hotbar />}
       
       {/* 开始游戏屏幕 - 移动端优化 */}
       {!isLocked && !showSaveManager && !showCrafting && !showFurnace && (

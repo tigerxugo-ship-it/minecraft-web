@@ -1,17 +1,30 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import { VirtualJoystick } from './VirtualJoystick';
 import { ActionButtons } from './ActionButtons';
 import { HotbarMobile } from './HotbarMobile';
 import { useGameStore } from '../engine/gameStore';
 import { useDeviceOrientation } from './touchUtils';
 
+// 直接使用 ref 存储输入状态，避免 React 状态更新延迟
+const touchInputRef = {
+  moveX: 0,
+  moveY: 0,
+  lookDeltaX: 0,
+  lookDeltaY: 0,
+  jump: false,
+  mine: false,
+  place: false,
+  minePressed: false,
+  placePressed: false,
+};
+
+// 导出给 Player 组件使用
+export function getTouchInput() {
+  return touchInputRef;
+}
+
 export function TouchControls() {
   const {
-    setTouchMoveInput,
-    setTouchLookInput,
-    triggerTouchJump,
-    triggerTouchMine,
-    triggerTouchPlace,
     setPaused,
     setOpenCraftingStation,
     setSelectedSlot,
@@ -20,39 +33,34 @@ export function TouchControls() {
     isLocked,
   } = useGameStore();
 
-  const [lookActive, setLookActive] = useState(false);
+  const lookActiveRef = useRef(false);
   const lastTouchRef = useRef({ x: 0, y: 0 });
   const { isLandscape, isIPad } = useDeviceOrientation();
 
   const layout = isLandscape || isIPad ? 'landscape' : 'portrait';
 
-  // 调试日志
-  useEffect(() => {
-    console.log('[TouchControls] isLocked:', isLocked);
-  }, [isLocked]);
-
+  // 摇杆移动
   const handleJoystickChange = useCallback((x: number, y: number) => {
-    setTouchMoveInput(x, y);
-  }, [setTouchMoveInput]);
+    touchInputRef.moveX = x;
+    touchInputRef.moveY = y;
+  }, []);
 
   const handleJoystickEnd = useCallback(() => {
-    setTouchMoveInput(0, 0);
-  }, [setTouchMoveInput]);
+    touchInputRef.moveX = 0;
+    touchInputRef.moveY = 0;
+  }, []);
 
+  // 视角控制
   const handleLookStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     const touch = e.touches[0];
     if (touch) {
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
-      setLookActive(true);
+      lookActiveRef.current = true;
     }
   }, []);
 
   const handleLookMove = useCallback((e: React.TouchEvent) => {
-    if (!lookActive) return;
-    e.preventDefault();
-    e.stopPropagation();
+    if (!lookActiveRef.current) return;
 
     const touch = e.touches[0];
     if (!touch) return;
@@ -60,48 +68,55 @@ export function TouchControls() {
     const deltaX = touch.clientX - lastTouchRef.current.x;
     const deltaY = touch.clientY - lastTouchRef.current.y;
 
-    // 灵敏度调整
-    const sensitivity = 0.8;
-    setTouchLookInput(deltaX * sensitivity, deltaY * sensitivity);
+    touchInputRef.lookDeltaX = deltaX * 0.8;
+    touchInputRef.lookDeltaY = deltaY * 0.8;
 
     lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
-  }, [lookActive, setTouchLookInput]);
+  }, []);
 
-  const handleLookEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLookActive(false);
-    setTouchLookInput(0, 0);
-  }, [setTouchLookInput]);
+  const handleLookEnd = useCallback(() => {
+    lookActiveRef.current = false;
+    touchInputRef.lookDeltaX = 0;
+    touchInputRef.lookDeltaY = 0;
+  }, []);
 
+  // 按钮操作 - 使用按压状态而非触发器
   const handleJump = useCallback(() => {
-    console.log('[TouchControls] Jump triggered');
-    triggerTouchJump();
-  }, [triggerTouchJump]);
+    touchInputRef.jump = true;
+    // 100ms 后自动重置
+    setTimeout(() => { touchInputRef.jump = false; }, 100);
+  }, []);
 
-  const handleMine = useCallback(() => {
-    console.log('[TouchControls] Mine triggered');
-    triggerTouchMine();
-  }, [triggerTouchMine]);
+  const handleMineStart = useCallback(() => {
+    touchInputRef.minePressed = true;
+    touchInputRef.mine = true;
+  }, []);
 
-  const handlePlace = useCallback(() => {
-    console.log('[TouchControls] Place triggered');
-    triggerTouchPlace();
-  }, [triggerTouchPlace]);
+  const handleMineEnd = useCallback(() => {
+    touchInputRef.minePressed = false;
+    touchInputRef.mine = false;
+  }, []);
+
+  const handlePlaceStart = useCallback(() => {
+    touchInputRef.placePressed = true;
+    touchInputRef.place = true;
+  }, []);
+
+  const handlePlaceEnd = useCallback(() => {
+    touchInputRef.placePressed = false;
+    touchInputRef.place = false;
+  }, []);
 
   const handleOpenInventory = useCallback(() => {
-    console.log('[TouchControls] Inventory triggered');
     setOpenCraftingStation('inventory');
     setPaused(true);
   }, [setOpenCraftingStation, setPaused]);
 
   const handlePause = useCallback(() => {
-    console.log('[TouchControls] Pause triggered');
     setPaused(true);
   }, [setPaused]);
 
   const handleSlotChange = useCallback((slot: number) => {
-    console.log('[TouchControls] Slot change:', slot);
     setSelectedSlot(slot);
   }, [setSelectedSlot]);
 
@@ -123,7 +138,6 @@ export function TouchControls() {
     >
       {/* 左下角 - 虚拟摇杆 */}
       <div
-        data-touch-control
         onTouchStart={(e) => e.stopPropagation()}
         style={{
           position: 'absolute',
@@ -144,7 +158,6 @@ export function TouchControls() {
 
       {/* 右下角 - 动作按钮 */}
       <div
-        data-touch-control
         onTouchStart={(e) => e.stopPropagation()}
         style={{
           position: 'absolute',
@@ -156,8 +169,10 @@ export function TouchControls() {
         }}
       >
         <ActionButtons
-          onMine={handleMine}
-          onPlace={handlePlace}
+          onMineStart={handleMineStart}
+          onMineEnd={handleMineEnd}
+          onPlaceStart={handlePlaceStart}
+          onPlaceEnd={handlePlaceEnd}
           onJump={handleJump}
           onInventory={handleOpenInventory}
           onPause={handlePause}
@@ -167,7 +182,6 @@ export function TouchControls() {
 
       {/* 右半屏幕 - 视角控制区域 */}
       <div
-        data-touch-control
         style={{
           position: 'absolute',
           top: 80,
