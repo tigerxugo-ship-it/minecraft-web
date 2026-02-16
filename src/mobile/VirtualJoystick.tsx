@@ -20,7 +20,11 @@ export function VirtualJoystick({
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     const touch = e.touches[0];
+    if (!touch) return;
+    
     touchIdRef.current = touch.identifier;
     setActive(true);
     
@@ -41,7 +45,7 @@ export function VirtualJoystick({
       const y = Math.sin(angle) * clampedDistance;
       
       setPosition({ x, y });
-      onChange(x / maxDistance, -y / maxDistance); // 反转Y轴
+      onChange(x / maxDistance, -y / maxDistance);
     }
   }, [maxDistance, onChange]);
 
@@ -99,11 +103,15 @@ export function VirtualJoystick({
         width: size,
         height: size,
         borderRadius: '50%',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        border: '2px solid rgba(255, 255, 255, 0.4)',
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        border: '3px solid rgba(255, 255, 255, 0.5)',
         position: 'relative',
         touchAction: 'none',
         userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        cursor: 'pointer',
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -116,10 +124,10 @@ export function VirtualJoystick({
           position: 'absolute',
           top: '50%',
           left: '50%',
-          width: 8,
-          height: 8,
+          width: 10,
+          height: 10,
           borderRadius: '50%',
-          backgroundColor: 'rgba(255, 255, 255, 0.5)',
+          backgroundColor: 'rgba(255, 255, 255, 0.6)',
           transform: 'translate(-50%, -50%)',
         }}
       />
@@ -132,11 +140,13 @@ export function VirtualJoystick({
           width: size * 0.4,
           height: size * 0.4,
           borderRadius: '50%',
-          backgroundColor: active ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)',
-          border: '2px solid rgba(255, 255, 255, 0.6)',
+          backgroundColor: active ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
+          border: '3px solid rgba(255, 255, 255, 0.8)',
           transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
           transition: active ? 'none' : 'transform 0.1s ease-out',
-          boxShadow: active ? '0 0 10px rgba(255, 255, 255, 0.5)' : 'none',
+          boxShadow: active 
+            ? '0 0 20px rgba(255, 255, 255, 0.8)' 
+            : '0 4px 10px rgba(0, 0, 0, 0.3)',
         }}
       />
     </div>

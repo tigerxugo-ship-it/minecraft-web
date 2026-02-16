@@ -21,38 +21,48 @@ export function ActionButtons({
   const buttonSize = layout === 'landscape' ? 60 : 50;
   const fontSize = layout === 'landscape' ? 24 : 20;
 
-  const handleMineStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+  // iOS 兼容的点击处理
+  const handleMine = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setMining(true);
     onMine();
-    
-    // 持续挖掘
-    const interval = setInterval(() => {
-      onMine();
-    }, 200);
-    
-    const handleEnd = () => {
-      setMining(false);
-      clearInterval(interval);
-    };
-    
-    const cleanup = () => {
-      handleEnd();
-      document.removeEventListener('touchend', cleanup);
-      document.removeEventListener('mouseup', cleanup);
-    };
-    
-    document.addEventListener('touchend', cleanup);
-    document.addEventListener('mouseup', cleanup);
   }, [onMine]);
+
+  const handleMineEnd = useCallback(() => {
+    setMining(false);
+  }, []);
+
+  const handlePlace = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onPlace();
+  }, [onPlace]);
+
+  const handleInventory = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onInventory();
+  }, [onInventory]);
+
+  const handlePause = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onPause();
+  }, [onPause]);
+
+  const handleJump = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onJump?.();
+  }, [onJump]);
 
   const buttonStyle = (isPressed: boolean = false): React.CSSProperties => ({
     width: buttonSize,
     height: buttonSize,
     borderRadius: '50%',
-    backgroundColor: isPressed ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)',
-    border: '2px solid rgba(255, 255, 255, 0.5)',
+    backgroundColor: isPressed ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.35)',
+    border: '3px solid rgba(255, 255, 255, 0.6)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -61,133 +71,82 @@ export function ActionButtons({
     touchAction: 'none',
     userSelect: 'none',
     WebkitUserSelect: 'none',
+    WebkitTouchCallout: 'none',
     margin: layout === 'landscape' ? 8 : 6,
-    boxShadow: isPressed ? '0 0 15px rgba(255, 255, 255, 0.4)' : 'none',
-    transition: 'all 0.1s ease',
+    boxShadow: isPressed 
+      ? '0 0 20px rgba(255, 255, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3)' 
+      : '0 4px 10px rgba(0, 0, 0, 0.3)',
+    transition: 'all 0.05s ease',
+    // iOS 特定优化
+    WebkitTapHighlightColor: 'transparent',
   });
-
-  const MineButton = (
-    <button
-      onTouchStart={handleMineStart}
-      onMouseDown={handleMineStart}
-      style={buttonStyle(mining)}
-      aria-label="挖掘"
-    >
-      ⛏️
-    </button>
-  );
-
-  const PlaceButton = (
-    <button
-      onTouchStart={(e) => {
-        e.preventDefault();
-        onPlace();
-      }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onPlace();
-      }}
-      style={buttonStyle()}
-      aria-label="放置"
-    >
-      🧱
-    </button>
-  );
-
-  const JumpButton = onJump ? (
-    <button
-      onTouchStart={(e) => {
-        e.preventDefault();
-        onJump();
-      }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onJump();
-      }}
-      style={buttonStyle()}
-      aria-label="跳跃"
-    >
-      ⬆️
-    </button>
-  ) : null;
-
-  const InventoryButton = (
-    <button
-      onTouchStart={(e) => {
-        e.preventDefault();
-        onInventory();
-      }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onInventory();
-      }}
-      style={buttonStyle()}
-      aria-label="背包"
-    >
-      📦
-    </button>
-  );
-
-  const PauseButton = (
-    <button
-      onTouchStart={(e) => {
-        e.preventDefault();
-        onPause();
-      }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onPause();
-      }}
-      style={buttonStyle()}
-      aria-label="暂停"
-    >
-      ⏸️
-    </button>
-  );
-
-  if (layout === 'landscape') {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        {/* 上排 */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          {MineButton}
-          {PlaceButton}
-        </div>
-        {/* 中排 - 跳跃 */}
-        {JumpButton && <div style={{ display: 'flex', gap: 12 }}>{JumpButton}</div>}
-        {/* 下排 */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          {InventoryButton}
-          {PauseButton}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
       style={{
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: layout === 'landscape' ? 'column' : 'row',
         alignItems: 'center',
-        gap: 8,
-        flexWrap: 'wrap',
+        gap: layout === 'landscape' ? 12 : 8,
+        flexWrap: layout === 'portrait' ? 'wrap' : 'nowrap',
         justifyContent: 'center',
-        maxWidth: 200,
+        maxWidth: layout === 'portrait' ? 280 : undefined,
       }}
     >
-      {MineButton}
-      {PlaceButton}
-      {JumpButton}
-      {InventoryButton}
-      {PauseButton}
+      {/* 挖掘按钮 */}
+      <button
+        onTouchStart={handleMine}
+        onTouchEnd={handleMineEnd}
+        onMouseDown={handleMine}
+        onMouseUp={handleMineEnd}
+        onMouseLeave={handleMineEnd}
+        style={buttonStyle(mining)}
+        aria-label="挖掘"
+      >
+        ⛏️
+      </button>
+
+      {/* 放置按钮 */}
+      <button
+        onTouchStart={handlePlace}
+        onClick={handlePlace}
+        style={buttonStyle()}
+        aria-label="放置"
+      >
+        🧱
+      </button>
+
+      {/* 跳跃按钮 (可选) */}
+      {onJump && (
+        <button
+          onTouchStart={handleJump}
+          onClick={handleJump}
+          style={buttonStyle()}
+          aria-label="跳跃"
+        >
+          ⬆️
+        </button>
+      )}
+
+      {/* 背包按钮 */}
+      <button
+        onTouchStart={handleInventory}
+        onClick={handleInventory}
+        style={buttonStyle()}
+        aria-label="背包"
+      >
+        📦
+      </button>
+
+      {/* 暂停按钮 */}
+      <button
+        onTouchStart={handlePause}
+        onClick={handlePause}
+        style={buttonStyle()}
+        aria-label="暂停"
+      >
+        ⏸️
+      </button>
     </div>
   );
 }

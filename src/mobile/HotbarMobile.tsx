@@ -27,51 +27,60 @@ export function HotbarMobile({ inventory, selectedSlot, onSlotChange }: HotbarMo
 
   return (
     <div
+      data-touch-control
       style={{
         position: 'fixed',
         bottom: 20,
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
-        gap: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        padding: '8px 12px',
-        borderRadius: 12,
-        zIndex: 100,
+        gap: 6,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        padding: '10px 14px',
+        borderRadius: 14,
+        zIndex: 1000,
+        pointerEvents: 'auto',
       }}
     >
       {slots.map((item, index) => {
         const isSelected = index === selectedSlot;
         const icon = BLOCK_ICONS[item.type] || BLOCK_ICONS.default;
         
+        const handleSelect = (e: React.TouchEvent | React.MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSlotChange(index);
+        };
+        
         return (
           <button
             key={index}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              onSlotChange(index);
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              onSlotChange(index);
-            }}
+            onTouchStart={handleSelect}
+            onClick={handleSelect}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 6,
-              backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)',
+              width: 48,
+              height: 48,
+              borderRadius: 8,
+              backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)',
               border: isSelected 
-                ? '3px solid rgba(255, 255, 255, 0.8)' 
-                : '2px solid rgba(255, 255, 255, 0.3)',
+                ? '3px solid rgba(255, 255, 255, 0.9)' 
+                : '2px solid rgba(255, 255, 255, 0.4)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 20,
+              fontSize: 22,
               cursor: 'pointer',
               touchAction: 'none',
               userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent',
               position: 'relative',
+              boxShadow: isSelected 
+                ? '0 0 15px rgba(255, 255, 255, 0.5)' 
+                : '0 2px 5px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.05s ease',
             }}
             aria-label={`槽位 ${index + 1}`}
           >
@@ -82,7 +91,7 @@ export function HotbarMobile({ inventory, selectedSlot, onSlotChange }: HotbarMo
                   position: 'absolute',
                   bottom: 2,
                   right: 4,
-                  fontSize: 10,
+                  fontSize: 11,
                   color: 'white',
                   fontWeight: 'bold',
                   textShadow: '1px 1px 2px black',
@@ -97,7 +106,7 @@ export function HotbarMobile({ inventory, selectedSlot, onSlotChange }: HotbarMo
                 top: 2,
                 left: 4,
                 fontSize: 10,
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: 'rgba(255, 255, 255, 0.8)',
                 fontWeight: 'bold',
               }}
             >

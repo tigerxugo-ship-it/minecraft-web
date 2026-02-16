@@ -240,6 +240,11 @@ export function Player() {
     }
   }, [isLocked, camera, gl, raycaster, removeBlock, addBlock, getBlockAt, selectedSlot, inventory, removeFromInventory, ref, startMining, stopMining])
 
+  // 触摸触发器引用
+  const lastTouchMineTrigger = useRef(0)
+  const lastTouchPlaceTrigger = useRef(0)
+  const lastTouchJumpTrigger = useRef(0)
+
   // 物理更新和挖掘进度
   useFrame(() => {
     if (!ref.current) return
@@ -268,10 +273,12 @@ export function Player() {
     
     direction.normalize().multiplyScalar(SPEED)
     
-    // 跳跃 (键盘或触摸)
-    if ((moveState.current.jump && isGrounded.current) || touchJumpTrigger > 0) {
+    // 跳跃 (键盘或触摸) - 修复：检测触发器变化
+    if ((moveState.current.jump && isGrounded.current) || 
+        (touchJumpTrigger > 0 && touchJumpTrigger !== lastTouchJumpTrigger.current)) {
       api.velocity.set(velocity.current[0], JUMP_FORCE, velocity.current[2])
       isGrounded.current = false
+      lastTouchJumpTrigger.current = touchJumpTrigger
     } else {
       api.velocity.set(direction.x, velocity.current[1], direction.z)
     }
@@ -298,8 +305,10 @@ export function Player() {
       useGameStore.getState().setTouchLookInput(0, 0)
     }
     
-    // 触摸挖掘
-    if (touchMineTrigger > 0) {
+    // 触摸挖掘 - 修复：检测触发器变化
+    if (touchMineTrigger > 0 && touchMineTrigger !== lastTouchMineTrigger.current) {
+      lastTouchMineTrigger.current = touchMineTrigger
+      
       // 执行挖掘逻辑
       raycaster.setFromCamera(mouse, camera)
       const intersects = raycaster.intersectObjects(scene.children, true)
@@ -331,8 +340,10 @@ export function Player() {
       }
     }
     
-    // 触摸放置
-    if (touchPlaceTrigger > 0) {
+    // 触摸放置 - 修复：检测触发器变化
+    if (touchPlaceTrigger > 0 && touchPlaceTrigger !== lastTouchPlaceTrigger.current) {
+      lastTouchPlaceTrigger.current = touchPlaceTrigger
+      
       raycaster.setFromCamera(mouse, camera)
       const intersects = raycaster.intersectObjects(scene.children, true)
       
