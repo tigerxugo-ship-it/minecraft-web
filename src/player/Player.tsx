@@ -4,7 +4,7 @@ import { useSphere } from '@react-three/cannon'
 import * as THREE from 'three'
 import { useGameStore } from '../engine/gameStore'
 import { BLOCK_PROPERTIES, BlockType } from '../blocks/Block'
-import { getTouchInput } from '../mobile/TouchControls'
+import { touchInput } from '../mobile/TouchControls'
 
 const SPEED = 5
 const JUMP_FORCE = 8
@@ -260,8 +260,6 @@ export function Player() {
   useFrame(() => {
     if (!ref.current) return
     
-    const touchInput = getTouchInput()
-    
     // 移动逻辑
     const direction = new THREE.Vector3()
     const frontVector = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
@@ -278,7 +276,7 @@ export function Player() {
     if (moveState.current.left) direction.sub(sideVector)
     if (moveState.current.right) direction.add(sideVector)
     
-    // 触摸移动
+    // 触摸移动 - 使用全局 touchInput
     if (touchInput.moveX !== 0 || touchInput.moveY !== 0) {
       direction.add(frontVector.clone().multiplyScalar(touchInput.moveY))
       direction.add(sideVector.clone().multiplyScalar(touchInput.moveX))
@@ -320,7 +318,7 @@ export function Player() {
     }
     
     // 触摸挖掘
-    if (touchInput.minePressed && !wasMiningRef.current) {
+    if (touchInput.mine && !wasMiningRef.current) {
       wasMiningRef.current = true
       
       raycaster.setFromCamera(mouse, camera)
@@ -350,12 +348,12 @@ export function Player() {
           break
         }
       }
-    } else if (!touchInput.minePressed) {
+    } else if (!touchInput.mine) {
       wasMiningRef.current = false
     }
     
     // 触摸放置
-    if (touchInput.placePressed && !wasPlacingRef.current) {
+    if (touchInput.place && !wasPlacingRef.current) {
       wasPlacingRef.current = true
       
       raycaster.setFromCamera(mouse, camera)
@@ -388,7 +386,7 @@ export function Player() {
           }
         }
       }
-    } else if (!touchInput.placePressed) {
+    } else if (!touchInput.place) {
       wasPlacingRef.current = false
     }
     
