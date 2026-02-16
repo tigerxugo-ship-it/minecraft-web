@@ -177,17 +177,53 @@ function App() {
       
       {!showSaveManager && !showCrafting && !showFurnace && <Hotbar />}
       
+      {/* 开始游戏屏幕 - 移动端优化 */}
       {!isLocked && !showSaveManager && !showCrafting && !showFurnace && (
-        <div className="start-screen">
-          <h1>Minecraft Web</h1>
-          <p>点击屏幕开始游戏</p>
-          {mobile && (
-            <p style={{ fontSize: '14px', color: '#ffaa00', marginTop: '15px' }}>
-              ⚠️ 移动端支持有限，建议使用桌面浏览器
+        <div 
+          className="start-screen"
+          onTouchStart={(e) => {
+            e.preventDefault();
+            if (mobile || isIPadDevice) {
+              // 移动端直接锁定游戏
+              useGameStore.getState().setLocked(true);
+            }
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            if (mobile || isIPadDevice) {
+              useGameStore.getState().setLocked(true);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            zIndex: 2000,
+            cursor: 'pointer',
+            touchAction: 'none',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Minecraft Web</h1>
+          <p style={{ fontSize: '24px', marginBottom: '10px' }}>点击屏幕开始游戏</p>
+          {(mobile || isIPadDevice) && (
+            <p style={{ fontSize: '16px', color: '#ffaa00', marginTop: '20px', textAlign: 'center' }}>
+              📱 触摸控制：<br/>
+              左摇杆移动 | 右滑视角 | 按钮操作
             </p>
           )}
-          <p style={{ fontSize: '12px', marginTop: '10px', opacity: 0.7 }}>
-            推荐：使用 Chrome 或 Firefox 浏览器
+          <p style={{ fontSize: '14px', marginTop: '30px', opacity: 0.7 }}>
+            推荐：使用 Chrome 或 Safari 浏览器
           </p>
         </div>
       )}

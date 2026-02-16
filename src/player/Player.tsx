@@ -110,10 +110,28 @@ export function Player() {
     return () => window.removeEventListener('wheel', onWheel)
   }, [isLocked])
 
-  // 鼠标锁定
+  // 鼠标锁定 (仅桌面端)
   useEffect(() => {
     const canvas = gl.domElement
     
+    // 检测是否为移动端
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    
+    // 移动端不使用 pointer lock
+    if (isMobileDevice) {
+      // 移动端点击开始游戏
+      const onTouchStart = () => {
+        if (!isLocked) {
+          setLocked(true)
+        }
+      }
+      canvas.addEventListener('touchstart', onTouchStart)
+      return () => {
+        canvas.removeEventListener('touchstart', onTouchStart)
+      }
+    }
+    
+    // 桌面端使用 pointer lock
     const onClick = () => {
       if (!isLocked) {
         canvas.requestPointerLock()
