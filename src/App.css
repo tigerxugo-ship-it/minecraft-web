@@ -1,0 +1,176 @@
+.start-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 200;
+  cursor: pointer;
+}
+
+.start-screen h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.start-screen p {
+  font-size: 20px;
+  opacity: 0.8;
+}
+
+.crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 150;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: '';
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.crosshair::before {
+  width: 2px;
+  height: 16px;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.crosshair::after {
+  width: 16px;
+  height: 2px;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 挖掘进度条 */
+.mining-progress {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 151;
+}
+
+.mining-progress-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    rgba(255, 255, 255, 0.8) var(--progress, 0%),
+    transparent var(--progress, 0%)
+  );
+  mask: radial-gradient(transparent 55%, black 56%);
+  -webkit-mask: radial-gradient(transparent 55%, black 56%);
+}
+
+/* 快捷栏样式 */
+.hotbar-slot {
+  transition: all 0.1s ease;
+}
+
+.hotbar-slot:hover {
+  transform: scale(1.05);
+}
+
+.hotbar-slot.active {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(136, 204, 255, 0.5);
+}
+
+/* 工具耐久度条 */
+.durability-bar {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background-color: #333;
+  border-radius: 1px;
+}
+
+.durability-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.2s ease;
+}
+
+.durability-bar-fill.high {
+  background-color: #0F0;
+}
+
+.durability-bar-fill.medium {
+  background-color: #FF0;
+}
+
+.durability-bar-fill.low {
+  background-color: #F00;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .controls-hint {
+    font-size: 12px !important;
+    padding: 10px !important;
+  }
+  
+  .start-screen h1 {
+    font-size: 32px;
+  }
+  
+  .start-screen p {
+    font-size: 16px;
+  }
+}
+
+/* 动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* 血条动画 */
+@keyframes damage-flash {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+.damage-flash {
+  animation: damage-flash 0.2s ease-out;
+}

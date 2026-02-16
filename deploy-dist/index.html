@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Minecraft Web</title>
+    <style>
+      body { 
+        margin: 0; 
+        overflow: hidden; 
+        background: #000; 
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      canvas { 
+        display: block; 
+        touch-action: none;
+      }
+      #webgl-error {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background: rgba(0,0,0,0.8);
+        border-radius: 10px;
+        display: none;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-3zEPvouS.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-UjWVYC6b.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="webgl-error">
+      <h2>WebGL 不支持</h2>
+      <p>您的设备或浏览器不支持 WebGL，无法运行此应用。</p>
+      <p>请尝试：</p>
+      <ul style="text-align: left;">
+        <li>使用最新版本的 Chrome 或 Safari</li>
+        <li>检查是否禁用了硬件加速</li>
+        <li>在设置中启用 WebGL</li>
+      </ul>
+    </div>
+    <script>
+      // WebGL 检测
+      (function() {
+        var canvas = document.createElement('canvas');
+        var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) {
+          document.getElementById('webgl-error').style.display = 'block';
+          document.getElementById('root').style.display = 'none';
+        }
+      })();
+    </script>
+  </body>
+</html>
